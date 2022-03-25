@@ -2,7 +2,7 @@
 
 ### 使用 ###
 
-项目 `gitee` 路径：https://gitee.com/jiao-yan-xia/meiduo-backstage/tree/master/
+美多后台项目 `gitee` 路径：https://gitee.com/jiao-yan-xia/meiduo-backstage
 
 1) 使用 `git clone` 将项目拷贝
 2) 在项目根目录使用 `npm install` 安装依赖
