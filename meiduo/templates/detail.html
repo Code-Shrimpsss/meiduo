@@ -130,7 +130,9 @@
     </div>
 
     <div class="goods_detail_con clearfix">
-        <div class="goods_detail_pic fl"><img src="{{ sku.default_image.url }}"></div>
+        <div class="goods_detail_pic fl">
+            {# <img src="{{ sku.default_image.url }}">#}
+        </div>
         <div class="goods_detail_list fr">
             <h3>{{ sku.name }}</h3>
             <p>{{ sku.caption }}</p>
@@ -173,7 +175,7 @@
                 <h3>热销排行</h3>
                 <ul>
                     <li v-for="sku in hot_skus">
-                        <a :href="sku.url"><img :src="sku.default_image_url"></a>
+                        {# <a :href="sku.url"><img :src="sku.default_image_url"></a>#}
                         <h4><a :href="sku.url">[[sku.name]]</a></h4>
                         <div class="prize">￥[[sku.price]]</div>
                     </li>

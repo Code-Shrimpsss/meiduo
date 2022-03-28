@@ -202,7 +202,7 @@ class UserBrowseHistory(View):
             skus.append({
                 'id': sku.id,
                 'name': sku.name,
-                'default_image_url': sku.default_image.url,
+                'default_image_url': sku.default_image.url if sku.default_image else "",
                 'price': sku.price
             })
         return JsonResponse({"code": 0, 'errmsg': 'OK', 'skus': skus})
