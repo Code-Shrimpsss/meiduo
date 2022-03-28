@@ -1028,4 +1028,431 @@ class ImageView(ModelViewSet):
         return Response(status=status.HTTP_201_CREATED)
 ```
 
+## 商品SKU数据获取 ##
+
+新建 `sku_views.py` 视图 与 `sku_serializer.py` 序列号器
+
+### 接口分析 ###
+
+**请求方式**： GET`/meiduo_admin/skus/?keyword=<名称>&page=<页码>&page_size=<页容量>`
+
+**请求参数**： 通过请求头传递 jwt token数据。
+
+**返回数据**： JSON
+
+```python
+{
+        "count": "商品SPU总数量",
+        "lists": [
+            {
+                "id": "商品SKU ID",
+                "name": "商品SKU名称",
+                "spu": "商品SPU名称",
+                "spu_id": "商品SPU ID",
+                "caption": "商品副标题",
+                "category_id": "三级分类id",
+                "category": "三级分类名称",
+                "price": "价格",
+                "cost_price": "进价",
+                "market_price": "市场价格",
+                "stock": "库存",
+                "sales": "销量",
+                "is_launched": "上下架"
+            },
+            ...
+          ],
+            "page": "页码",
+            "pages": "总页数",
+            "pagesize": "页容量"
+      }
+```
+
+| 返回值   | 类型 | 是否必须 | 说明       |
+| :------- | :--- | :------- | :--------- |
+| count    | int  | 是       | SKUs商总量 |
+| lists    | 数组 | 是       | SKU信息    |
+| page     | int  | 是       | 页码       |
+| pages    | int  | 是       | 总页数     |
+| pagesize | int  | 是       | 页容量     |
+
+### 商品SKU数据获取代码 ###
+
+**sku_views.py 视图：**
+
+```python
+# 获取所有商品SKU数据
+class SKUModelViewSet(ModelViewSet):
+    queryset = SKU.objects.all()
+    serializer_class = SKUdeSerializer
+    pagination_class = PageNum
+```
+
+**sku_serializer.py 序列化器**
+
+```python
+# 商品SKU的序列化器
+class SKUdeSerializer(ModelSerializer):
+    class Meta:
+        model = SKU
+        fields = '__all__'
+```
+
+**urls.py 路由：**
+
+```python
+urlpatterns = []
+# ----- 使用默认实例
+router = DefaultRouter()
+# ----- 注册路由
+router.register(r'skus', SKUModelViewSet, basename='SKU')
+# ----- 追加到 urlpatterns 中
+urlpatterns += router.urls
+```
+
+## 商品SKU数据新增更新功能 ##
+
+🥚这个功能涉及到的接口与小功能颇多，列开逐一讲，分别有 **获取三级分类信息，获取 SPU 表名称信息，获取 SPU商品规格信息，   **
+
+## 获取 三级分类信息 ##
+
+### 接口分析 ###
+
+**请求方式**： GET `/meiduo_admin/skus/categories/`
+
+**请求参数**： 通过请求头传递jwt token数据。
+
+**返回数据**： JSON
+
+```python
+[
+        {
+            "id": "商品分类id",
+            "name": "商品分类名称"
+        },
+        ...
+]
+```
+
+| 返回值 | 类型 | 是否必须 | 说明         |
+| :----- | :--- | :------- | :----------- |
+| Id     | int  | 是       | 商品分类id   |
+| name   | 数组 | 是       | 商品分类名称 |
+
+### 获取三级分类信息代码 ###
+
+**sku_views.py 视图：**
+
+```python
+# 获取所有三级类别数据
+class SKUCategoriesView(ListAPIView):
+    serializer_class = SKUCategorieSerializer
+	# 三级路由没有下级 固为 None
+    queryset = GoodsCategory.objects.filter(subs=None)
+```
+
+**sku_serializer.py 序列化器**
+
+```python
+# 三级路由的序列化器
+class SKUCategorieSerializer(ModelSerializer):
+    class Meta:
+        model = GoodsCategory
+        fields = '__all__'
+```
+
+**urls.py 路由：**
+
+```python
+urlpatterns = [
+    # 用于获取所有三级类别数据
+    path('skus/categories/', SKUCategoriesView.as_view())
+]
+```
+
+
+
+## 获取 SPU 表名称信息 ##
+
+### 接口分析 ###
+
+**请求方式**： GET `/meiduo_admin/skus/simple/`
+
+**请求参数**： 通过请求头传递jwt token数据。
+
+**返回数据**： JSON
+
+```python
+[
+        {
+            "id": "商品SPU ID",
+            "name": "SPU名称"
+        },
+        ...
+]
+```
+
+| 返回值 | 类型 | 是否必须 | 说明        |
+| :----- | :--- | :------- | :---------- |
+| Id     | int  | 是       | 商品 SPU ID |
+| name   | 数组 | 是       | SPU 名称    |
+
+### 获取 SPU 表名称信息代码 ###
+
+**sku_views.py 视图：**
+
+```python
+# 获取简单的SPU数据
+class GoodsSimpleView(ListAPIView):
+    serializer_class = GoodsSimpleSerializer
+    queryset = SPU.objects.all()
+```
+
+**sku_serializer.py 序列化器**
+
+```python
+# SPU表名称信息的序列化器
+class GoodsSimpleSerializer(ModelSerializer):
+    class Meta:
+        model = SPU
+        fields = '__all__'
+```
+
+**urls.py 路由：**
+
+```python
+urlpatterns = [
+    # 用于返回SPU表名称数据
+    path('skus/simple/', SKUView.as_view())
+]
+```
+
+
+
+## 获取 SPU商品规格信息 ##
+
+### 接口分析 ###
+
+**请求方式**： GET `/meiduo_admin/goods/(?P<pk>\d+)/specs/`
+
+**请求参数**： 通过请求头传递 jwt token 数据。
+
+**返回数据**： JSON
+
+```python
+ [
+        {
+            "id": "规格id",
+            "name": "规格名称",
+            "spu": "SPU商品名称",
+            "spu_id": "SPU商品id",
+            "options": [
+                {
+                    "id": "选项id",
+                    "name": "选项名称"
+                },
+                ...
+            ]
+        },
+        ...
+]
+```
+
+| 返回值  | 类型 | 是否必须 | 说明           |
+| :------ | :--- | :------- | :------------- |
+| Id      | int  | 是       | 规格id         |
+| name    | Str  | 是       | 规格名称       |
+| Sup     | str  | 是       | Spu商品名称    |
+| Spu_id  | Int  | 是       | spu商品id      |
+| options |      | 是       | 关联的规格选项 |
+
+### 获取 SPU商品规格信息代码 ###
+
+**sku_views.py 视图：**
+
+```python
+# 获取商品规格
+class GoodsSpecView(ListAPIView):
+    serializer_class = SpecModelSerializer
+
+    def get_queryset(self):
+        pk = self.kwargs.get('pk')
+        return SPUSpecification.objects.filter(spu_id=pk)
+```
+
+**sku_serializer.py 序列化器**
+
+```python
+# 供商品规格使用的序列化器
+class GoodsOptionSerializer(ModelSerializer):
+    class Meta:
+        model = SpecificationOption
+        fields = ('id', 'value')
+
+
+# 获取商品规格的序列化器
+class SpecModelSerializer(ModelSerializer):
+    options = GoodsOptionSerializer(many=True)
+
+    spu = serializers.StringRelatedField()
+    spu_id = serializers.IntegerField()
+
+    class Meta:
+        model = SPUSpecification
+        fields = '__all__'
+```
+
+**urls.py 路由：**
+
+```python
+urlpatterns = [
+    # 用于获取规格
+    path('goods/<int:pk>/specs/', GoodsSpecView.as_view())
+]
+```
+
+
+
+## 新增商品SKU数据 ##
+
+### 接口分析 ###
+
+**请求方式**： POST`meiduo_admin/skus/`
+
+**请求参数**： 通过请求头传递jwt token数据。
+
+**返回数据**： JSON
+
+```js
+  {
+        "id": "商品SKU ID",
+        "name": "商品SKU名称",
+        "spu": "商品SPU名称",
+        "spu_id": "商品SPU ID",
+        "caption": "商品副标题",
+        "category_id": "三级分类id",
+        "category": "三级分类名称",
+        "price": "价格",
+        "cost_price": "进价",
+        "market_price": "市场价",
+        "stock": "库存",
+        "sales": "销量",
+        "is_launched": "上下架",
+        "specs": [
+            {
+                "spec_id": "规格id",
+                "option_id": "选项id"
+            },
+            ...
+        ]
+    }
+```
+
+| 参数         | 类型  | 是否必须 | 说明        |
+| :----------- | :---- | :------- | :---------- |
+| name         | str   | 是       | 商品SKU名称 |
+| spu_id       | int   |          | 商品SPU ID  |
+| caption      | str   |          | 商品副标题  |
+| category_id  | int   |          | 三级分类ID  |
+| price        | int   |          | 价格        |
+| cost_price   | int   |          | 进价        |
+| market_price | int   |          | 市场价      |
+| stock        | int   |          | 库存        |
+| is_launched  | boole |          | 上下架      |
+
+### 获取 SPU 表名称信息代码 ###
+
+**sku_views.py 视图与 urls.py 路由：**
+
+不需要另外定义，使用之前定义好的 `SKUModelViewSet` 与 `router.register(r'skus', SKUModelViewSet, basename='SKU')`  即可
+
+**sku_serializer.py 序列化器**
+
+1) 定义规格序列化器
+
+   ```python
+   # SPU表名称信息的序列化器
+   class GoodsSimpleSerializer(ModelSerializer):
+       class Meta:
+           model = SPUclass SKUSpecificationSerialzier(ModelSerializer):
+       # SKU 规格表序列化器
+       spec_id = serializers.IntegerField()
+       option_id = serializers.IntegerField()
+   
+       class Meta:
+           model = SKUSpecification
+           fields = ("spec_id", "option_id")
+   ```
+
+   
+
+2) 是SKU序列化器接收需求字段
+
+   ```python
+   # SKU的序列化器
+   class SKUdeSerializer(ModelSerializer):
+       # 添加2个字段接收 category_id 与 spu_id
+       spu_id = serializers.IntegerField()
+       category_id = serializers.IntegerField()
+       # 自己定义 spu 和 category 字段 为 StringRelatedField
+       spu = serializers.StringRelatedField(read_only=True)
+       category = serializers.StringRelatedField(read_only=True)
+   
+       # 定义specs字段来接收规格信息 : spec_id , option_id 与 SKUSpecification 对应
+       # 定义 SKUSpecificationSerialzier 序列化器来实现反序列化操作
+       specs = SKUSpecificationSerialzier(many=True)
+   
+       class Meta:
+           model = SKU
+           fields = '__all__'
+   ```
+
+   
+
+3) 在`SKUdeSerializer` 中重写 `create` 方法创建使用
+
+   ```python
+       # 重写 create 方法,
+       def create(self, validated_data):
+           # 1 获取规格数据并从字典里删除
+           specs = validated_data.pop('specs')
+   
+           # ----- 创建事务(悲观锁)
+           with transaction.atomic():
+               # --- 获取保存点
+               save_point = transaction.savepoint()
+               try:
+                   # 2 保存sku
+                   sku = SKU.objects.create(**validated_data)
+                   # 3循环specs保存规格
+                   for i in specs:
+                       SKUSpecification.objects.create(sku=sku, **i)
+               except Exception as e:
+                   # --- 若报错回滚到保存点 save_point
+                   transaction.savepoint_rollback(save_point)
+               else:
+                   # --- 执行成功则提交保存
+                   transaction.savepoint_commit(save_point)
+           # 4返回sku对象
+           return sku
+   ```
+
+## 新增商品SKU更新 ##
+
+只需`SKUdeSerializer` 中重写 `update` 方法即可
+
+```python
+    # 重写 update 方法
+    def update(self, instance, validated_data):
+        specs = validated_data.pop('specs')
+        super().update(instance, validated_data)
+        for spec in specs:
+            new_spec_id = spec.get('spec_id')
+            new_option_id = spec.get('option_id')
+            SKUSpecification.objects.filter(sku=instance, spec_id=new_spec_id).update(option_id=new_option_id)
+        return instance
+```
+
+
+
+
 
