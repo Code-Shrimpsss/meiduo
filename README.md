@@ -1452,6 +1452,450 @@ urlpatterns = [
         return instance
 ```
 
+## 权限管理 ##
+
+🥚这个功能涉及到的接口与小功能颇多，列开逐一讲，分别有 **获取权限表列表数据，保存权限表列表数据 ** ；更新与删除自动使用父类内部定义即可
+
+## 获取权限表列表数据 ##
+
+新建 `permission_views.py` 视图 与 `permission_serializer.py` 序列号器
+
+### 接口分析 ###
+
+**请求方式**： GET`/meiduo_admin/permission/perms/`
+
+**请求参数**： 通过请求头传递jwt token数据。
+
+**返回数据**： JSON
+
+```python
+ {
+        "count": "权限总数量",
+        "lists": [
+            {
+                "id": "权限id",
+                "name": "权限名称",
+                "codename": "权限识别名",
+                "content_type": "权限类型"
+            },
+            ...
+        ],
+        "page": "当前页码",
+        "pages": "总页码",
+        "pagesize": "页容量"
+ }
+```
+
+| 返回值   | 类型 | 是否必须 | 说明       |
+| :------- | :--- | :------- | :--------- |
+| count    | int  | 是       | SKUs商总量 |
+| lists    | 数组 | 是       | SKU信息    |
+| page     | int  | 是       | 页码       |
+| pages    | int  | 是       | 总页数     |
+| pagesize | int  | 是       | 页容量     |
+
+### 获取权限表列表数据代码 ###
+
+**permission_views.py 视图：**
+
+```python
+# 获取权限数据
+class PermissionView(ModelViewSet):
+    queryset = Permission.objects.order_by('id')
+    serializer_class = PermissionSerializer
+    pagination_class = PageNum
+```
+
+**permission_serializer.py 序列化器**
+
+```python
+# 获取权限数据
+class PermissionSerializer(ModelSerializer):
+    class Meta:
+        model = Permission
+        fields = "__all__"
+```
+
+**urls.py 路由：**
+
+```python
+urlpatterns = []
+# ----- 使用默认实例
+router = DefaultRouter()
+# ----- 注册路由
+router.register(r'permission/perms', PermissionView, basename='Permission')
+# ----- 追加到 urlpatterns 中
+urlpatterns += router.urls
+```
+
+
+
+## 保存权限表列表数据  ##
+
+### 接口分析 ###
+
+**请求方式**： GET`/meiduo_admin/permission/content_types/`
+
+**请求参数**： 通过请求头传递jwt token数据。
+
+**返回数据**： JSON
+
+```python
+  [
+        {
+            "id": "权限类型id",
+            "name": "权限类型名称"
+        },
+        ...
+]
+```
+
+| 返回值 | 类型 | 是否必须 | 说明         |
+| :----- | :--- | :------- | :----------- |
+| Id     | int  | 是       | 权限类型id   |
+| name   | 数组 | 是       | 权限类型名称 |
+
+### 保存权限表列表数据 代码 ###
+
+**permission_views.py 视图：**
+
+```python
+# 保存权限数据
+class ContentTypeView(APIView):
+    def get(self, request):
+        # 查询全选分类
+        content = ContentType.objects.all()
+        # 返回结果
+        ser = ContentTypeSerializer(content, many=True)
+        return Response(ser.data)
+```
+
+**permission_serializer.py 序列化器**
+
+```python
+# 保存用户权限
+class ContentTypeSerializer(ModelSerializer):
+    class Meta:
+        model = ContentType
+        fields = ('id', 'name')
+```
+
+**urls.py 路由：**
+
+```python
+from .views.permission import ContentTypeAPIView
+urlpatterns = [
+    path('permission/content_types/',ContentTypeAPIView.as_view()),
+]
+```
+
+
+
+## 用户组管理 ##
+
+🥚这个功能涉及到的接口与小功能颇多，列开逐一讲，分别有 **获取用户组表列表数据，新增用户组表列表数据 ** ；更新与删除自动使用父类内部定义即可
+
+## 获取用户组表列表数据 ##
+
+新建 `group_views.py` 视图 与 `group_serializer.py` 序列号器
+
+### 接口分析 ###
+
+**请求方式**： GET`/meiduo_admin/permission/groups/`
+
+**请求参数**： 通过请求头传递jwt token数据。
+
+**返回数据**： JSON
+
+```python
+{
+        "count": "用户组总数量",
+        "lists": [
+            {
+                "id": "组id",
+                "name": "组名称",
+            },
+            ...
+        ],
+        "page": "当前页码",
+        "pages": "总页码",
+        "pagesize": "页容量"
+}
+```
+
+| 返回值   | 类型 | 是否必须 | 说明       |
+| :------- | :--- | :------- | :--------- |
+| count    | int  | 是       | SKUs商总量 |
+| lists    | 数组 | 是       | SKU信息    |
+| page     | int  | 是       | 页码       |
+| pages    | int  | 是       | 总页数     |
+| pagesize | int  | 是       | 页容量     |
+
+### 获取用户组表列表数据代码 ###
+
+**group_views.py 视图：**
+
+```python
+# 获取用户组数据
+class GroupView(ModelViewSet):
+    serializer_class = GroupSerializer
+    queryset = Group.objects.all()
+    pagination_class = PageNum
+```
+
+**group_serializer.py 序列化器**
+
+```python
+# 获取用户组数据
+class GroupSerializer(ModelSerializer):
+    class Meta:
+        model = Group
+        fields = '__all__'
+```
+
+**urls.py 路由：**
+
+```python
+urlpatterns = []
+# ----- 使用默认实例
+router = DefaultRouter()
+# ----- 注册路由
+router.register(r'permission/groups', GroupView, basename='Group')
+# ----- 追加到 urlpatterns 中
+urlpatterns += router.urls
+```
+
+
+
+## 新增用户组表列表数据 ##
+
+### 接口分析 ###
+
+**请求方式**： GET`/meiduo_admin/permission/simple/`
+
+**请求参数**： 通过请求头传递jwt token数据。
+
+**返回数据**： JSON
+
+```python
+  [
+        {
+            "id": "权限类型id",
+            "name": "权限类型名称"
+        },
+        ...
+]
+```
+
+| 返回值 | 类型 | 是否必须 | 说明         |
+| :----- | :--- | :------- | :----------- |
+| Id     | int  | 是       | 权限类型id   |
+| name   | 数组 | 是       | 权限类型名称 |
+
+### 新增用户组表列表数据 代码 ###
+
+**group_views.py 视图：**
+
+```python
+# 新增用户组数据
+class GroupAddView(APIView):
+    def get(self, request):
+        pers = Permission.objects.all()
+        ser = PermissionSerializer(pers, many=True)
+        return Response(ser.data)
+```
+
+**urls.py 路由：**
+
+```python
+from .views.group_view import AdminSimpleAPIView
+urlpatterns = [
+  	path('permission/groups/simple/', AdminSimpleAPIView.as_view())
+]
+```
+
+**无需创建序列化器**
+
+
+
+## 管理员信息管理 ##
+
+🥚这个功能涉及到的接口与小功能颇多，列开逐一讲，分别有 **获取管理员用户列表数据，新增用户组表列表数据 ，更新管理员用户列表数据** ；删除自动使用父类内部定义即可
+
+## 获取管理员列表数据 ##
+
+新建 `admin_views.py` 视图 与 `admin_serializer.py` 序列号器
+
+### 接口分析 ###
+
+**请求方式**： GET`/meiduo_admin/permission/admins/`
+
+**请求参数**： 通过请求头传递jwt token数据。
+
+**返回数据**： JSON
+
+```python
+   {
+        "id": "用户id",
+        "username": "用户名",
+        "email": "邮箱",
+        "mobile": "手机号"
+}
+```
+
+| 返回值   | 类型 | 是否必须 | 说明   |
+| :------- | :--- | :------- | :----- |
+| id       | int  | 是       | 用户id |
+| username | str  | 是       | 用户名 |
+| Email    | str  | 是       | 页码   |
+| mobile   | str  | 是       | 总页数 |
+
+### 获取管理员列表数据代码 ###
+
+**admin_views.py 视图：**
+
+```python
+# 获取管理员用户列表数据
+class AdminView(ModelViewSet):
+    queryset = User.objects.filter(is_staff=True)
+    serializer_class = AdminSerializer
+    pagination_class = PageNum
+```
+
+**admin_serializer.py 序列化器**
+
+```python
+class AdminSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = "__all__"
+        # 或修改原有的选项参数 密码为只读
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+```
+
+**urls.py 路由：**
+
+```python
+urlpatterns = []
+# ----- 使用默认实例
+router = DefaultRouter()
+# ----- 注册路由
+router.register(r'permission/admins', AdminView, basename='Admin')
+# ----- 追加到 urlpatterns 中
+urlpatterns += router.urls
+```
+
+
+
+## 保存管理员列表数据 ##
+
+### 接口分析 ###
+
+**请求方式**： GET`/meiduo_admin/permission/groups/simple/`
+
+**请求参数**： 通过请求头传递jwt token数据。
+
+**返回数据**： JSON
+
+```python
+[
+        {
+            "id": 1,
+            "name": "广告组"
+        },
+        {
+            "id": 2,
+            "name": "商品SKU组"
+        },
+        ......
+]
+```
+
+| 返回值 | 类型 | 是否必须 | 说明     |
+| :----- | :--- | :------- | :------- |
+| Id     | int  | 是       | 分组id   |
+| name   | 数组 | 是       | 分组名称 |
+
+### 获取管理员列表数据代码 ###
+
+**admin_views.py 视图：**
+
+```python
+# 获取分组表数据
+class AdminSimpleAPIView(APIView):
+    def get(self, request):
+        pers = Group.objects.all()
+        ser = GroupSerializer(pers, many=True)
+        return Response(ser.data)
+```
+
+**urls.py 路由：**
+
+```python
+from .views.group_view import AdminSimpleAPIView
+urlpatterns = [
+    path('permission/groups/simple/', AdminSimpleAPIView.as_view()),
+]
+```
+
+**admin_serializer.py 序列化器**
+
+在序列化器中的   `AdminSerializer` 父类下重写 `create` 方法
+
+```python
+class AdminSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = "__all__"
+        # 或修改原有的选项参数 密码为只读
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+        # 重写 create 方法： 用于添加管理员权限
+        def create(self, validated_data):
+            # 1. 调用父类create方法
+            admin = super().create(validated_data)
+            # 2. 对用户密码进行加密
+            password = validated_data['password']
+            # 3. 调用set_password
+            admin.set_password(password)
+            # 4. 设置为管理员
+            admin.is_staff = True
+            # 5. 保存管理员数据
+            admin.save()
+            # 6. 返回数据
+            return admin
+```
+
+## 更新管理员列表数据 ##
+
+在 `admin_serializer.py` 序列化器中的   `AdminSerializer` 父类下重写 `update `方法
+
+```python
+class AdminSerializer(ModelSerializer):
+    class Meta:
+        ...
+        
+        
+		# 重写 update 方法： 用于更改管理员权限
+        def update(self, instance, validated_data):
+            # 1. 调用父类update方法实现数据更新
+            super().update(instance, validated_data)
+            # 2. 获取用户密码
+            password = validated_data.get('password')
+            # 3. 判断是否用户修改了密码
+            if not password:
+                instance.set_password(password)
+                instance.save()
+
+            # 4. 返回实例数据
+            return instance
+```
+
+
 
 
 
