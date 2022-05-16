@@ -2,7 +2,7 @@
 
 ### 使用 ###
 
-美多后台项目 `gitee` 路径：https://gitee.com/jiao-yan-xia/meiduo-backstage
+本项目采用前后端模式进行开发，文件分别是 商场前端目录`front_end_pc`， 后台前端目录`meiduo_admin`,后端目录`meiduo`
 
 1) 使用 `git clone` 将项目拷贝
 2) 在项目根目录使用 `npm install` 安装依赖
@@ -1894,7 +1894,6 @@ class AdminSerializer(ModelSerializer):
             # 4. 返回实例数据
             return instance
 ```
-
 
 
 
